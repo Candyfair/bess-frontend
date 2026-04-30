@@ -29,6 +29,7 @@ export default function Home() {
 
   // Called when a bubble is tapped in BubbleChart
   function handleBubbleSelect(battery) {
+    console.log("selectedBattery set to", battery);
     setSelectedBattery(battery);
   }
 

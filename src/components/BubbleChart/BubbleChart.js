@@ -198,7 +198,10 @@ export default function BubbleChart({ batteries, metric, selectedId, onSelect })
             <g
               key={node.id}
               className="bubble-node"
-              onClick={() => onSelect(node)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect(node);
+              }}
               style={{ cursor: "pointer", willChange: "transform" }}
             >
               <BubbleNode
