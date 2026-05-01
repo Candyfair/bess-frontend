@@ -1,6 +1,6 @@
-# BESS Grid Manager — Frontend
+# Grid Asset Manager — Frontend
 
-A mobile-first React interface for monitoring and interacting with a grid-scale battery energy storage fleet. Built as the frontend counterpart to the **BESS Grid Manager backend** developed by [Christian Baker](https://github.com/roadtowiganpier).
+A mobile-first React interface for monitoring and interacting with a grid-scale battery energy storage fleet. Built as the frontend counterpart to the **Grid Asset Manager backend** developed by [Christian Baker](https://github.com/roadtowiganpier).
 
 ---
 
@@ -22,7 +22,7 @@ This application provides:
 |---|---|
 | Framework | Next.js (React) |
 | Language | JavaScript |
-| Routing | React Router |
+| Routing | Next App Router |
 | HTTP | Fetch API |
 | Styling | TBD |
 
@@ -88,4 +88,4 @@ src/
 
 ---
 
-*BESS Grid Manager Frontend · Next.js · React · JavaScript · Mobile-first*
+* Grid Asset Manager Frontend · Next.js · React · JavaScript · Mobile-first*
