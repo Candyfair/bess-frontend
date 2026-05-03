@@ -1,41 +1,61 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
-import { useBatteries } from "@/hooks/useBatteries";
+import { Settings } from "lucide-react";
+import { useAssets } from "@/hooks/useAssets";
 import BubbleChart from "@/components/BubbleChart/BubbleChart";
 import Toggle from "@/components/UI/Toggle";
+import FilterModal from "@/components/UI/FilterModal";
 
-// -------------------------------------------------------------------
-// PAGE COMPONENT
-// Holds all application state and assembles the main view:
-//   - Toggle (metric switcher)
-//   - BubbleChart (D3 force map)
-//   - Detail panel (slides up from the bottom on bubble tap)
-// -------------------------------------------------------------------
 export default function Home() {
-  const { batteries, loading, error } = useBatteries();
+  const { assets, loading, error } = useAssets();
 
-  // Active metric — shared between Toggle and BubbleChart
-  const [metric, setMetric] = useState("capacity_kwh");
+  const [metric, setMetric] = useState("power_mw");
+  const [selectedAsset, setSelectedAsset] = useState(null);
 
-  // Full battery object of the selected bubble, or null if none selected.
-  // We store the full object so the detail panel can render without an extra API call.
-  const [selectedBattery, setSelectedBattery] = useState(null);
+  // activeFilters is a Set of asset type keys, or a Set containing "all"
+  const [activeFilters, setActiveFilters] = useState(new Set(["all"]));
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  // ------------------------------------------------------------------
+  // DERIVED STATE
+  // filteredAssets is recomputed only when assets or activeFilters change.
+  // useMemo avoids refiltering on every render triggered by other state.
+  // ------------------------------------------------------------------
+  const filteredAssets = useMemo(() => {
+    if (activeFilters.has("all")) return assets;
+    return assets.filter((a) => activeFilters.has(a.asset_type));
+  }, [assets, activeFilters]);
+
+  // The metric toggle is only visible when the filter is "battery" only
+  const showToggle =
+    activeFilters.size === 1 && activeFilters.has("battery");
+
+  // When the toggle is hidden, power_mw is the forced metric.
+  // We derive the effective metric here so BubbleChart always gets
+  // the correct value regardless of what the Toggle last emitted.
+  const effectiveMetric = showToggle ? metric : "power_mw";
 
   // ------------------------------------------------------------------
   // HANDLERS
   // ------------------------------------------------------------------
-
-  // Called when a bubble is tapped in BubbleChart
-  function handleBubbleSelect(battery) {
-    console.log("selectedBattery set to", battery);
-    setSelectedBattery(battery);
+  function handleBubbleSelect(asset) {
+    setSelectedAsset(asset);
   }
 
-  // Called by the close button or a tap on the map background
   function handleDismiss() {
-    setSelectedBattery(null);
+    setSelectedAsset(null);
+  }
+
+  function handleFilterChange(newFilters) {
+    setActiveFilters(newFilters);
+
+    // If the selected bubble is no longer in the filtered set, close the panel
+    if (selectedAsset && !newFilters.has("all")) {
+      const stillVisible = newFilters.has(selectedAsset.asset_type);
+      if (!stillVisible) setSelectedAsset(null);
+    }
   }
 
   // ------------------------------------------------------------------
@@ -44,7 +64,7 @@ export default function Home() {
   if (loading) {
     return (
       <div style={styles.centeredScreen}>
-        <p style={styles.statusText}>Loading batteries...</p>
+        <p style={styles.statusText}>Loading assets...</p>
       </div>
     );
   }
@@ -63,78 +83,87 @@ export default function Home() {
   return (
     <main style={styles.root}>
 
-      {/* ---- TOGGLE — floats above the map ---- */}
-      <div style={styles.toggleWrapper}>
-        <Toggle value={metric} onChange={setMetric} />
+      {/* ---- HEADER ---- */}
+      <div style={styles.header}>
+        {/* Dark mode icon will sit here — added in a later step */}
+        <button
+          style={styles.headerButton}
+          onClick={() => setIsFilterOpen(true)}
+          aria-label="Open filters"
+        >
+          <Settings size={22} color="#EEECE6" />
+        </button>
       </div>
 
+      {/* ---- TOGGLE — visible only when filter is battery-only ---- */}
+      {showToggle && (
+        <div style={styles.toggleWrapper}>
+          <Toggle value={metric} onChange={setMetric} />
+        </div>
+      )}
+
       {/* ---- BUBBLE MAP ---- */}
-      {/* onClick on this wrapper dismisses the selection when tapping the background */}
       <div style={styles.mapWrapper} onClick={handleDismiss}>
         <BubbleChart
-          batteries={batteries}
-          metric={metric}
-          selectedId={selectedBattery?.id ?? null}
+          assets={filteredAssets}
+          metric={effectiveMetric}
+          selectedId={selectedAsset?.id ?? null}
           onSelect={handleBubbleSelect}
         />
       </div>
 
       {/* ---- DETAIL PANEL ---- */}
-      {/* Always in the DOM — visibility is controlled via translateY transition */}
       <div
         style={{
           ...styles.panel,
-          transform: selectedBattery ? "translateY(0)" : "translateY(110%)",
+          transform: selectedAsset ? "translateY(0)" : "translateY(110%)",
         }}
-        // Stop tap propagation so tapping the panel does not trigger handleDismiss
         onClick={(e) => e.stopPropagation()}
       >
-        {selectedBattery && (
+        {selectedAsset && (
           <>
-            {/* Panel header */}
             <div style={styles.panelHeader}>
-              <h2 style={styles.panelTitle}>{selectedBattery.name}</h2>
-              <button style={styles.closeButton} onClick={handleDismiss}>
-                ✕
-              </button>
+              <h2 style={styles.panelTitle}>{selectedAsset.name}</h2>
+              <button style={styles.closeButton} onClick={handleDismiss}>✕</button>
             </div>
 
-            {/* Battery fields */}
             <div style={styles.panelBody}>
-              <DetailRow label="Manufacturer" value={selectedBattery.manufacturer} />
               <DetailRow
                 label="Capacity"
-                value={`${Math.round(selectedBattery.capacity_kwh)} kWh`}
+                value={`${Math.round(selectedAsset.energy_mwh)} MWh`}
               />
               <DetailRow
-                label="Max charge rate"
-                value={`${Math.round(selectedBattery.max_charge_rate_kw)} kW`}
+                label="Power"
+                value={`${selectedAsset.power_mw?.toFixed(2)} MW`}
               />
               <DetailRow
                 label="Status"
-                value={selectedBattery.is_active ? "Active" : "Inactive"}
-                valueColor={selectedBattery.is_active ? "#4FC3F7" : "#78909c"}
+                value={selectedAsset.operational_mode ?? "—"}
               />
             </div>
 
-            {/* Navigation to the full detail page */}
-            <Link
-              href={`/batteries/${selectedBattery.id}`}
-              style={styles.detailLink}
-            >
+            <Link href={`/assets/${selectedAsset.id}`} style={styles.detailLink}>
               View details →
             </Link>
           </>
         )}
       </div>
+
+      {/* ---- FILTER MODAL ---- */}
+      {isFilterOpen && (
+        <FilterModal
+          activeFilters={activeFilters}
+          onChange={handleFilterChange}
+          onClose={() => setIsFilterOpen(false)}
+        />
+      )}
+
     </main>
   );
 }
 
 // -------------------------------------------------------------------
 // DETAIL ROW
-// Small presentational sub-component for a label/value pair in the panel.
-// Defined in the same file because it is only used here.
 // -------------------------------------------------------------------
 function DetailRow({ label, value, valueColor = "#ffffff" }) {
   return (
@@ -149,9 +178,6 @@ function DetailRow({ label, value, valueColor = "#ffffff" }) {
 // STYLES
 // -------------------------------------------------------------------
 const styles = {
-  // Full-screen root container.
-  // dvh (dynamic viewport height) accounts for the browser chrome on mobile Safari —
-  // unlike vh, it reflects the actual visible height after the address bar collapses.
   root: {
     position: "relative",
     width: "100%",
@@ -160,7 +186,28 @@ const styles = {
     overflow: "hidden",
   },
 
-  // Toggle floats above the map, centred at the top
+  // Header strip — top of screen, contains icon buttons
+  header: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    zIndex: 10,
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+
+  headerButton: {
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    padding: 4,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
   toggleWrapper: {
     position: "absolute",
     top: 24,
@@ -169,15 +216,11 @@ const styles = {
     zIndex: 10,
   },
 
-  // Map fills the entire screen behind the overlay elements
   mapWrapper: {
     position: "absolute",
-    inset: 0, // shorthand for top/right/bottom/left: 0
+    inset: 0,
   },
 
-  // Detail panel slides up from the bottom.
-  // Height is ~35% of the screen — leaves enough room for the map above.
-  // Transition on transform drives the slide-up/slide-down animation.
   panel: {
     position: "absolute",
     bottom: 0,
@@ -193,7 +236,6 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     gap: 12,
-    // Subtle top shadow to separate the panel from the map
     boxShadow: "0 -4px 24px rgba(0,0,0,0.5)",
   },
 
@@ -247,7 +289,6 @@ const styles = {
     fontWeight: "600",
   },
 
-  // "View details" link styled as a full-width button at the bottom of the panel
   detailLink: {
     display: "block",
     textAlign: "center",

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import * as d3 from "d3";
+import { getBubbleColor, getMetricValue } from "@/lib/bubbleUtils";
 import BubbleNode from "./BubbleNode";
 
 const CONFIG = {
@@ -9,14 +10,13 @@ const CONFIG = {
   COLLISION_PADDING: 6,
   ZOOM_MIN: 0.5,
   ZOOM_MAX: 4,
-  FOCUS_Y_RATIO: 0.25,
   FLOAT_SPEED_MIN: 0.006,
   FLOAT_SPEED_MAX: 0.022,
   FLOAT_FORCE: 0.22,
   VELOCITY_DECAY: 0.55,
 };
 
-export default function BubbleChart({ batteries, metric, selectedId, onSelect }) {
+export default function BubbleChart({ assets, metric, selectedId, onSelect }) {
   const svgRef = useRef(null);
   const gRef = useRef(null);
   const labelsRef = useRef(null);  // ref to the HTML label overlay container
@@ -30,12 +30,14 @@ export default function BubbleChart({ batteries, metric, selectedId, onSelect })
   const currentZoomRef = useRef(d3.zoomIdentity);
 
   const buildRadiusScale = useCallback((data, metricKey) => {
-    const values = data.map((b) => b[metricKey]);
-    return d3
-      .scaleLinear()
-      .domain([d3.min(values), d3.max(values)])
-      .range([CONFIG.MIN_RADIUS, CONFIG.MAX_RADIUS]);
-  }, []);
+  // getMetricValue returns Math.abs() for power_mw,
+  // so negative values don't collapse the radius scale
+  const values = data.map((b) => getMetricValue(b, metricKey));
+  return d3
+    .scaleLinear()
+    .domain([d3.min(values), d3.max(values)])
+    .range([CONFIG.MIN_RADIUS, CONFIG.MAX_RADIUS]);
+}, []);
 
   // -------------------------------------------------------------------
   // LABEL POSITION UPDATE
@@ -64,16 +66,16 @@ export default function BubbleChart({ batteries, metric, selectedId, onSelect })
   // SIMULATION INITIALISATION
   // -------------------------------------------------------------------
   useEffect(() => {
-    if (!batteries.length || !svgRef.current) return;
+    if (!assets.length || !svgRef.current) return;
 
     const svg = d3.select(svgRef.current);
     const width = svgRef.current.clientWidth;
     const height = svgRef.current.clientHeight;
-    const radiusScale = buildRadiusScale(batteries, metric);
+    const radiusScale = buildRadiusScale(assets, metric);
 
-    const initialNodes = batteries.map((b) => ({
+    const initialNodes = assets.map((b) => ({
       ...b,
-      r: radiusScale(b[metric]),
+      r: radiusScale(getMetricValue(b, metric)),
       x: width / 2 + (Math.random() - 0.5) * 100,
       y: height / 2 + (Math.random() - 0.5) * 100,
       floatAngle: Math.random() * Math.PI * 2,
@@ -140,7 +142,7 @@ export default function BubbleChart({ batteries, metric, selectedId, onSelect })
       svg.on(".zoom", null);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [batteries]);
+  }, [metric, assets, buildRadiusScale]);
 
   // -------------------------------------------------------------------
   // METRIC UPDATE
@@ -148,34 +150,17 @@ export default function BubbleChart({ batteries, metric, selectedId, onSelect })
   useEffect(() => {
     if (!simulationRef.current || !nodesRef.current.length) return;
 
-    const radiusScale = buildRadiusScale(batteries, metric);
+    const radiusScale = buildRadiusScale(assets, metric);
     nodesRef.current.forEach((node) => {
-      node.r = radiusScale(node[metric]);
+      node.r = radiusScale(getMetricValue(node, metric));
     });
 
     simulationRef.current
       .force("collide", d3.forceCollide((d) => d.r + CONFIG.COLLISION_PADDING).strength(0.8))
       .alpha(0.5)
       .restart();
-  }, [metric, batteries, buildRadiusScale]);
+  }, [metric, assets, buildRadiusScale]);
 
-  // -------------------------------------------------------------------
-  // SELECTED BUBBLE FOCUS
-  // -------------------------------------------------------------------
-  useEffect(() => {
-    if (!selectedId || !svgRef.current || !simulationRef.current) return;
-
-    const node = nodesRef.current.find((n) => n.id === selectedId);
-    if (!node) return;
-
-    node.fx = svgRef.current.clientWidth / 2;
-    node.fy = svgRef.current.clientHeight * CONFIG.FOCUS_Y_RATIO;
-
-    return () => {
-      node.fx = null;
-      node.fy = null;
-    };
-  }, [selectedId]);
 
   // -------------------------------------------------------------------
   // RENDER
@@ -191,7 +176,7 @@ export default function BubbleChart({ batteries, metric, selectedId, onSelect })
       <svg
         ref={svgRef}
         style={{ width: "100%", height: "100%", display: "block" }}
-        aria-label="Battery fleet map"
+        aria-label="Asset fleet map"
       >
         <g ref={gRef}>
           {nodes.map((node) => (
@@ -206,8 +191,8 @@ export default function BubbleChart({ batteries, metric, selectedId, onSelect })
             >
               <BubbleNode
                 radius={node.r}
+                color={getBubbleColor(node)}
                 isSelected={node.id === selectedId}
-                isActive={node.is_active}
               />
             </g>
           ))}
@@ -227,10 +212,13 @@ export default function BubbleChart({ batteries, metric, selectedId, onSelect })
         }}
       >
         {nodes.map((node) => {
+          const rawPower = node.power_mw ?? 0;
+          const isNegative = metric === "power_mw" && rawPower < 0;
+
           const metricLabel =
-            metric === "capacity_kwh"
-              ? `${Math.round(node.capacity_kwh)} kWh`
-              : `${Math.round(node.max_charge_rate_kw)} kW`;
+            metric === "energy_mwh"
+              ? `${Math.round(node.energy_mwh)} MWh`
+              : `${rawPower >= 0 ? "" : "-"}${Math.abs(rawPower).toFixed(2)} MW`;
 
           const fontSize = Math.max(8, Math.min(node.r * 0.24, 13));
           const isSelected = node.id === selectedId;
@@ -274,7 +262,11 @@ export default function BubbleChart({ batteries, metric, selectedId, onSelect })
               <span
                 style={{
                   fontSize: fontSize * 0.88,
-                  color: isSelected ? "#e0f7fa" : "rgba(255,255,255,0.7)",
+                  color: isNegative
+                    ? "#FF6B6B"
+                    : isSelected
+                    ? "#e0f7fa"
+                    : "rgba(255,255,255,0.7)",
                   lineHeight: 1.1,
                   textAlign: "center",
                 }}

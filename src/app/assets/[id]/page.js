@@ -5,25 +5,25 @@ import Link from "next/link";
 import { API_BASE_URL } from "@/lib/constants";
 
 // -------------------------------------------------------------------
-// HOOK — useBattery
-// Fetches a single battery by id from the /batteries endpoint.
-// Defined here for now — move to src/hooks/useBattery.js once
+// HOOK — useAsset
+// Fetches a single asset by id from the /assetslist endpoint.
+// Defined here for now — move to src/hooks/useAsset.js once
 // additional API calls (telemetry, SOC, dispatch) are added.
 // -------------------------------------------------------------------
-function useBattery(id) {
-  const [battery, setBattery] = useState(null);
+function useAsset(id) {
+  const [asset, setAsset] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     if (!id) return;
 
-    async function fetchBattery() {
+    async function fetchAsset() {
       try {
         setLoading(true);
         setError(null);
 
-        const response = await fetch(`${API_BASE_URL}/batteries`);
+        const response = await fetch(`${API_BASE_URL}/assetslist`);
 
         if (!response.ok) {
           throw new Error(`API error: ${response.status}`);
@@ -31,16 +31,16 @@ function useBattery(id) {
 
         const data = await response.json();
 
-        // The API currently returns all batteries — filter by id.
-        // id from params is a string, battery.id from the API is a number,
+        // The API currently returns all assets — filter by id.
+        // id from params is a string, asset.id from the API is a number,
         // so we coerce with Number() before comparing.
         const match = data.find((b) => b.id === Number(id));
 
         if (!match) {
-          throw new Error(`Battery ${id} not found`);
+          throw new Error(`Asset ${id} not found`);
         }
 
-        setBattery(match);
+        setAsset(match);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -48,10 +48,10 @@ function useBattery(id) {
       }
     }
 
-    fetchBattery();
+    fetchAsset();
   }, [id]);
 
-  return { battery, loading, error };
+  return { asset, loading, error };
 }
 
 // -------------------------------------------------------------------
@@ -59,9 +59,9 @@ function useBattery(id) {
 // Receives { params: { id } } from Next.js App Router automatically.
 // The [id] folder name in the file system maps to this params shape.
 // -------------------------------------------------------------------
-export default function BatteryDetailPage({ params }) {
+export default function AssetDetailPage({ params }) {
   const { id } = params;
-  const { battery, loading, error } = useBattery(id);
+  const { asset, loading, error } = useAsset(id);
 
   // ------------------------------------------------------------------
   // LOADING STATE
@@ -69,7 +69,7 @@ export default function BatteryDetailPage({ params }) {
   if (loading) {
     return (
       <div style={styles.centeredScreen}>
-        <p style={styles.statusText}>Loading battery {id}...</p>
+        <p style={styles.statusText}>Loading asset {id}...</p>
       </div>
     );
   }
@@ -99,7 +99,7 @@ export default function BatteryDetailPage({ params }) {
         <Link href="/" style={styles.backButton}>
           ←
         </Link>
-        <h1 style={styles.title}>{battery.name}</h1>
+        <h1 style={styles.title}>{asset.name}</h1>
         {/* Spacer to keep the title visually centred */}
         <div style={{ width: 32 }} />
       </div>
@@ -109,11 +109,11 @@ export default function BatteryDetailPage({ params }) {
         <span
           style={{
             ...styles.badge,
-            backgroundColor: battery.is_active ? "#1a3a4a" : "#1e2a30",
-            color: battery.is_active ? "#4FC3F7" : "#78909c",
+            backgroundColor: asset.is_active ? "#1a3a4a" : "#1e2a30",
+            color: asset.is_active ? "#4FC3F7" : "#78909c",
           }}
         >
-          {battery.is_active ? "Active" : "Inactive"}
+          {asset.is_active ? "Active" : "Inactive"}
         </span>
       </div>
 
@@ -121,19 +121,19 @@ export default function BatteryDetailPage({ params }) {
       <div style={styles.section}>
         <h2 style={styles.sectionTitle}>General</h2>
         <div style={styles.card}>
-          <DetailRow label="Manufacturer" value={battery.manufacturer} />
+          <DetailRow label="Manufacturer" value={asset.manufacturer} />
           <Divider />
           <DetailRow
             label="Capacity"
-            value={`${Math.round(battery.capacity_kwh)} kWh`}
+            value={`${Math.round(asset.capacity_kwh)} kWh`}
           />
           <Divider />
           <DetailRow
             label="Max charge rate"
-            value={`${Math.round(battery.max_charge_rate_kw)} kW`}
+            value={`${Math.round(asset.max_charge_rate_kw)} kW`}
           />
           <Divider />
-          <DetailRow label="ID" value={`#${battery.id}`} />
+          <DetailRow label="ID" value={`#${asset.id}`} />
         </div>
       </div>
 
@@ -144,7 +144,7 @@ export default function BatteryDetailPage({ params }) {
         <h2 style={styles.sectionTitle}>State of charge</h2>
         <div style={{ ...styles.card, ...styles.placeholder }}>
           <p style={styles.placeholderText}>
-            Available once /batteries/{id}/soc is exposed
+            Available once /assets/{id}/soc is exposed
           </p>
         </div>
       </div>
@@ -153,7 +153,7 @@ export default function BatteryDetailPage({ params }) {
         <h2 style={styles.sectionTitle}>Telemetry</h2>
         <div style={{ ...styles.card, ...styles.placeholder }}>
           <p style={styles.placeholderText}>
-            Available once /batteries/{id}/telemetry is exposed
+            Available once /assets/{id}/telemetry is exposed
           </p>
         </div>
       </div>
@@ -162,7 +162,7 @@ export default function BatteryDetailPage({ params }) {
         <h2 style={styles.sectionTitle}>Dispatch commands</h2>
         <div style={{ ...styles.card, ...styles.placeholder }}>
           <p style={styles.placeholderText}>
-            Available once /batteries/{id}/dispatch is exposed
+            Available once /assets/{id}/dispatch is exposed
           </p>
         </div>
       </div>

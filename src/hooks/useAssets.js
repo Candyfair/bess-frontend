@@ -1,21 +1,21 @@
 import { useEffect, useState } from "react";
 import { API_BASE_URL } from "@/lib/constants";
 
-// Export function useBatteries
-export function useBatteries() {
-  const [batteries, setBatteries] = useState([])
+// Export function useAssets
+export function useAssets() {
+  const [assets, setAssets] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   
   useEffect(() => {
-    async function fetchBatteries() {
+    async function fetchAssets() {
       try {
-        const response = await fetch(`${API_BASE_URL}/batteries`)
+        const response = await fetch(`${API_BASE_URL}/assetslist`)
         if (!response.ok) {
           throw new Error(`Erreur HTTP : ${response.status}`)
         }
         const data = await response.json()
-        setBatteries(data)
+        setAssets(data)
       } catch (err) {
         setError(err.message)
       } finally {
@@ -23,8 +23,8 @@ export function useBatteries() {
       }
     }
     
-    fetchBatteries()
+    fetchAssets()
   }, [])
 
-  return {batteries, loading, error}    
+  return {assets, loading, error}    
 }

@@ -1,12 +1,10 @@
-// src/components/UI/Toggle.js
-
 // -------------------------------------------------------------------
 // CONFIGURATION
 // Add or remove entries here to support additional metrics.
 // -------------------------------------------------------------------
 const OPTIONS = [
-  { key: "capacity_kwh", label: "Capacity" },
-  { key: "max_charge_rate_kw", label: "Charge rate" },
+  { key: "energy_mwh", label: "Capacity" },
+  { key: "power_mw", label: "Charge rate" },
 ];
 
 // -------------------------------------------------------------------

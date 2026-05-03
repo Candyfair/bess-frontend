@@ -8,8 +8,8 @@ A mobile-first React interface for monitoring and interacting with a grid-scale 
 
 This application provides:
 
-- **Fleet dashboard** — visual overview of all 31 batteries with real-time state-of-charge, telemetry, and dispatch status
-- **Battery detail view** — per-asset data including voltage, current, temperature, and command history
+- **Fleet dashboard** — visual overview of all assets with real-time state-of-charge, telemetry, and dispatch status
+- **Asset detail view** — per-asset data including voltage, current, temperature, and command history
 - **Grid signal panel** — live French grid data sourced from the RTE API (generation mix, imbalance, FCR activation)
 - **Natural language interface** — ask questions about the fleet in plain text, powered by Mistral via the backend streaming endpoint
 - **Touch-optimised navigation** — designed for mobile devices, fully operable without a keyboard
@@ -71,7 +71,7 @@ The frontend consumes the following endpoints:
 | Method | Endpoint | Usage |
 |---|---|---|
 | `GET` | `/health` | API status check on app load |
-| `GET` | `/batteries` | Full battery fleet list |
+| `GET` | `/assetslist` | Full asset fleet list |
 | `POST` | `/llm/ask` | Streamed natural language query |
 
 ---
