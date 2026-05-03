@@ -41,21 +41,15 @@ export default function Toggle({ value, onChange }) {
   );
 }
 
-// -------------------------------------------------------------------
-// STYLES
-// Inline styles keep this component self-contained with no CSS file dependency.
-// The toggle sits on top of the bubble map so it needs a solid background.
-// -------------------------------------------------------------------
 const styles = {
   wrapper: {
     display: "flex",
     flexDirection: "row",
-    backgroundColor: "#1a2332",
+    backgroundColor: "var(--color-toggle-bg)",
     borderRadius: 24,
     padding: 4,
     gap: 4,
-    // Visual separation from the map below
-    boxShadow: "0 2px 12px rgba(0,0,0,0.4)",
+    boxShadow: "0 2px 12px rgba(0,0,0,0.2)",
   },
   option: {
     flex: 1,
@@ -69,19 +63,17 @@ const styles = {
     fontWeight: "600",
     letterSpacing: 0.3,
     cursor: "pointer",
-    // Smooth fill transition when switching between active and inactive
     transition: "background-color 0.2s ease, color 0.2s ease",
-    // Prevent text selection on rapid double-tap (common on mobile)
     userSelect: "none",
     WebkitUserSelect: "none",
   },
   optionActive: {
-    backgroundColor: "#29B6F6",
-    color: "#ffffff",
+    backgroundColor: "var(--color-toggle-active)",
+    color: "var(--color-text-on-dark)",
     cursor: "default",
   },
   optionInactive: {
     backgroundColor: "transparent",
-    color: "#78909c",
+    color: "var(--color-toggle-inactive)",
   },
 };

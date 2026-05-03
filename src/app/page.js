@@ -2,8 +2,9 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { Settings } from "lucide-react";
+import { Moon, Sun, Settings } from "lucide-react";
 import { useAssets } from "@/hooks/useAssets";
+import { useTheme } from "@/context/ThemeContext";
 import BubbleChart from "@/components/BubbleChart/BubbleChart";
 import Toggle from "@/components/UI/Toggle";
 import FilterModal from "@/components/UI/FilterModal";
@@ -13,10 +14,13 @@ export default function Home() {
 
   const [metric, setMetric] = useState("power_mw");
   const [selectedAsset, setSelectedAsset] = useState(null);
+  const [isThemeSpinning, setIsThemeSpinning] = useState(false);
 
   // activeFilters is a Set of asset type keys, or a Set containing "all"
   const [activeFilters, setActiveFilters] = useState(new Set(["all"]));
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  const { theme, toggleTheme } = useTheme();
 
   // ------------------------------------------------------------------
   // DERIVED STATE
@@ -46,6 +50,15 @@ export default function Home() {
 
   function handleDismiss() {
     setSelectedAsset(null);
+  }
+
+  function handleThemeToggle() {
+    if (isThemeSpinning) return; // prevents multiple clics during the animation
+    setIsThemeSpinning(true);
+    setTimeout(() => {
+      toggleTheme();
+      setIsThemeSpinning(false);
+    }, 350); // duration = one complete tour
   }
 
   function handleFilterChange(newFilters) {
@@ -81,95 +94,125 @@ export default function Home() {
   // RENDER
   // ------------------------------------------------------------------
   return (
-    <main style={styles.root}>
+    <>
+      <style>{`
+        @keyframes spin-once {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(360deg); }
+        }
+      `}</style>
 
-      {/* ---- HEADER ---- */}
-      <div style={styles.header}>
-        {/* Dark mode icon will sit here — added in a later step */}
-        <button
-          style={styles.headerButton}
-          onClick={() => setIsFilterOpen(true)}
-          aria-label="Open filters"
-        >
-          <Settings size={22} color="#EEECE6" />
-        </button>
-      </div>
+      <main style={styles.root}>
 
-      {/* ---- TOGGLE — visible only when filter is battery-only ---- */}
-      {showToggle && (
-        <div style={styles.toggleWrapper}>
-          <Toggle value={metric} onChange={setMetric} />
+        {/* ---- HEADER ---- */}
+        <div style={styles.header}>
+          <button
+            style={styles.headerButton}
+            onClick={handleThemeToggle}
+            aria-label="Toggle theme"
+            >
+              <span style={{
+                display: "flex",
+                animation: isThemeSpinning ? "spin-once 0.35s ease-in-out" : "none",
+              }}>
+                {theme === "light"
+                  ? <Moon size={22} color="var(--color-icon)" />
+                  : <Sun  size={22} color="var(--color-icon)" />
+                }
+              </span>
+          </button>
+          <button
+            style={styles.headerButton}
+            onClick={() => setIsFilterOpen(true)}
+            aria-label="Open filters"
+            >
+            <Settings size={22} color="var(--color-icon)" />
+          </button>
         </div>
-      )}
 
-      {/* ---- BUBBLE MAP ---- */}
-      <div style={styles.mapWrapper} onClick={handleDismiss}>
-        <BubbleChart
-          assets={filteredAssets}
-          metric={effectiveMetric}
-          selectedId={selectedAsset?.id ?? null}
-          onSelect={handleBubbleSelect}
-        />
-      </div>
-
-      {/* ---- DETAIL PANEL ---- */}
-      <div
-        style={{
-          ...styles.panel,
-          transform: selectedAsset ? "translateY(0)" : "translateY(110%)",
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {selectedAsset && (
-          <>
-            <div style={styles.panelHeader}>
-              <h2 style={styles.panelTitle}>{selectedAsset.name}</h2>
-              <button style={styles.closeButton} onClick={handleDismiss}>✕</button>
-            </div>
-
-            <div style={styles.panelBody}>
-              <DetailRow
-                label="Capacity"
-                value={`${Math.round(selectedAsset.energy_mwh)} MWh`}
-              />
-              <DetailRow
-                label="Power"
-                value={`${selectedAsset.power_mw?.toFixed(2)} MW`}
-              />
-              <DetailRow
-                label="Status"
-                value={selectedAsset.operational_mode ?? "—"}
-              />
-            </div>
-
-            <Link href={`/assets/${selectedAsset.id}`} style={styles.detailLink}>
-              View details →
-            </Link>
-          </>
+        {/* ---- TOGGLE — visible only when filter is battery-only ---- */}
+        {showToggle && (
+          <div style={styles.toggleWrapper}>
+            <Toggle value={metric} onChange={setMetric} />
+          </div>
         )}
-      </div>
 
-      {/* ---- FILTER MODAL ---- */}
-      {isFilterOpen && (
-        <FilterModal
+        {/* ---- BUBBLE MAP ---- */}
+        <div style={styles.mapWrapper} onClick={handleDismiss}>
+          <BubbleChart
+            assets={filteredAssets}
+            metric={effectiveMetric}
+            selectedId={selectedAsset?.id ?? null}
+            onSelect={handleBubbleSelect}
+            />
+        </div>
+
+        {/* ---- DETAIL PANEL ---- */}
+        <div
+          style={{
+            ...styles.panel,
+            transform: selectedAsset ? "translateY(0)" : "translateY(110%)",
+          }}
+          onClick={(e) => e.stopPropagation()}
+          >
+          {selectedAsset && (
+            <>
+              <div style={styles.panelHeader}>
+                <h2 style={styles.panelTitle}>{selectedAsset.name}</h2>
+                <button style={styles.closeButton} onClick={handleDismiss}>✕</button>
+              </div>
+
+              <div style={styles.panelBody}>
+                <div style={styles.panelRowsBlock}>
+
+                  <DetailRow
+                    label="Capacity"
+                    value={`${Math.round(selectedAsset.energy_mwh)} MWh`}
+                    />
+                  <DetailRow
+                    label="Power"
+                    value={`${selectedAsset.power_mw?.toFixed(2)} MW`}
+                    />
+                  <DetailRow
+                    label="Status"
+                    value={selectedAsset.operational_mode ?? "—"}
+                    />
+                </div>
+              </div>
+
+              <Link href={`/assets/${selectedAsset.id}`} style={styles.detailLink}>
+                View details →
+              </Link>
+            </>
+          )}
+        </div>
+
+        {/* ---- FILTER MODAL ---- */}
+        {isFilterOpen && (
+          <FilterModal
           activeFilters={activeFilters}
           onChange={handleFilterChange}
           onClose={() => setIsFilterOpen(false)}
-        />
-      )}
+          />
+        )}
 
-    </main>
+      </main>
+    </>
   );
 }
 
 // -------------------------------------------------------------------
 // DETAIL ROW
 // -------------------------------------------------------------------
-function DetailRow({ label, value, valueColor = "#ffffff" }) {
+function DetailRow({ label, value }) {
   return (
     <div style={styles.detailRow}>
-      <span style={styles.detailLabel}>{label}</span>
-      <span style={{ ...styles.detailValue, color: valueColor }}>{value}</span>
+      <span style={{ ...styles.detailLabel, color: "var(--color-panel-label)" }}>
+        {label}
+      </span>
+      <span style={{ ...styles.detailValue, color: "var(--color-panel-value)" }}>
+        {value}
+      </span>
     </div>
   );
 }
@@ -182,43 +225,7 @@ const styles = {
     position: "relative",
     width: "100%",
     height: "100dvh",
-    backgroundColor: "#0d1b2a",
     overflow: "hidden",
-  },
-
-  // Header strip — top of screen, contains icon buttons
-  header: {
-    position: "absolute",
-    top: 12,
-    right: 12,
-    zIndex: 10,
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-
-  headerButton: {
-    background: "none",
-    border: "none",
-    cursor: "pointer",
-    padding: 4,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  toggleWrapper: {
-    position: "absolute",
-    top: 24,
-    left: "50%",
-    transform: "translateX(-50%)",
-    zIndex: 10,
-  },
-
-  mapWrapper: {
-    position: "absolute",
-    inset: 0,
   },
 
   panel: {
@@ -227,7 +234,9 @@ const styles = {
     left: 0,
     right: 0,
     height: "35%",
-    backgroundColor: "#1a2332",
+    backgroundColor: "var(--color-panel-bg)",
+    border: "1px solid var(--color-panel-border)",
+    borderBottomWidth: 0,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: "20px 24px",
@@ -236,64 +245,41 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     gap: 12,
-    boxShadow: "0 -4px 24px rgba(0,0,0,0.5)",
-  },
-
-  panelHeader: {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    backdropFilter: "blur(8px)",
+    WebkitBackdropFilter: "blur(8px)",
   },
 
   panelTitle: {
     margin: 0,
     fontSize: 18,
     fontWeight: "700",
-    color: "#ffffff",
+    color: "var(--color-panel-title)",
+  },
+
+  panelRowsBlock: {
+    backgroundColor: "var(--color-panel-row-bg)",
+    borderRadius: 10,
+    padding: "8px 12px",
+    display: "flex",
+    flexDirection: "column",
+    gap: 8,
   },
 
   closeButton: {
     background: "none",
     border: "none",
-    color: "#78909c",
+    color: "var(--color-panel-title)",
     fontSize: 18,
     cursor: "pointer",
     padding: 4,
     lineHeight: 1,
   },
 
-  panelBody: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 8,
-    flex: 1,
-    overflowY: "auto",
-  },
-
-  detailRow: {
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-
-  detailLabel: {
-    fontSize: 13,
-    color: "#78909c",
-    fontWeight: "500",
-  },
-
-  detailValue: {
-    fontSize: 13,
-    fontWeight: "600",
-  },
-
   detailLink: {
     display: "block",
     textAlign: "center",
-    backgroundColor: "#29B6F6",
-    color: "#ffffff",
+    backgroundColor: "var(--color-detail-btn-bg)",
+    color: "var(--color-detail-btn-text)",
     textDecoration: "none",
     fontWeight: "700",
     fontSize: 14,
@@ -308,11 +294,68 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     height: "100dvh",
-    backgroundColor: "#0d1b2a",
   },
 
   statusText: {
-    color: "#78909c",
+    color: "var(--color-text-muted)",
     fontSize: 15,
+  },
+
+  header: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    zIndex: 10,
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  headerButton: {
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    padding: 4,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  toggleWrapper: {
+    position: "absolute",
+    top: 24,
+    left: "50%",
+    transform: "translateX(-50%)",
+    zIndex: 10,
+  },
+  mapWrapper: {
+    position: "absolute",
+    inset: 0,
+  },
+  panelHeader: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  panelBody: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 8,
+    flex: 1,
+    overflowY: "auto",
+  },
+  detailRow: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  detailLabel: {
+    fontSize: 13,
+    fontWeight: "500",
+  },
+  detailValue: {
+    fontSize: 13,
+    fontWeight: "600",
   },
 };

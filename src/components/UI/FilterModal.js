@@ -97,7 +97,7 @@ export default function FilterModal({ activeFilters, onChange, onClose }) {
         {/* Confirm button — centred at the bottom */}
         <div style={styles.confirmWrapper}>
           <button style={styles.confirmButton} onClick={onClose}>
-            <CircleCheckBig size={32} color="#24260E" />
+            <CircleCheckBig size={32} color="var(--color-modal-border)" />
           </button>
         </div>
 
@@ -110,24 +110,20 @@ export default function FilterModal({ activeFilters, onChange, onClose }) {
 // STYLES
 // -------------------------------------------------------------------
 const styles = {
-  // Full-screen backdrop with blur
   backdrop: {
     position: "fixed",
     inset: 0,
     zIndex: 50,
     backdropFilter: "blur(6px)",
     WebkitBackdropFilter: "blur(6px)",
-    // Semi-transparent dark overlay on top of the blur
     backgroundColor: "rgba(0, 0, 0, 0.25)",
-    // Centre the modal card vertically and horizontally
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
   },
-
   modal: {
-    backgroundColor: "#EEECE6",
-    border: "solid 1px #24260E",
+    backgroundColor: "var(--color-modal-bg)",
+    border: "1px solid var(--color-modal-border)",
     borderRadius: 16,
     padding: "24px 20px",
     width: "80%",
@@ -136,34 +132,29 @@ const styles = {
     flexDirection: "column",
     gap: 16,
   },
-
   row: {
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
-
   label: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#24260E",
+    color: "var(--color-modal-label)",
   },
-
   divider: {
     height: 1,
-    backgroundColor: "#24260E",
+    backgroundColor: "var(--color-modal-border)",
     opacity: 0.15,
     marginTop: -4,
     marginBottom: -4,
   },
-
   confirmWrapper: {
     display: "flex",
     justifyContent: "center",
     marginTop: 4,
   },
-
   confirmButton: {
     background: "none",
     border: "none",

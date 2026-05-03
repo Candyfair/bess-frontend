@@ -13,14 +13,15 @@ export default function ToggleSwitch({ enabled, onChange }) {
       style={{
         ...styles.track,
         // Track background is the same regardless of state
-        backgroundColor: "#D9D7D4",
+        backgroundColor: "var(--color-switch-track)",
       }}
     >
       <div
         style={{
           ...styles.thumb,
-          backgroundColor: enabled ? "#BE2A22" : "#7F7F7F",
-          // Slide the thumb right when enabled, left when disabled
+          backgroundColor: enabled 
+          ? "var(--color-switch-thumb-on)"
+          : "var(--color-switch-thumb-off)",
           transform: enabled ? "translateX(20px)" : "translateX(2px)",
         }}
       />
