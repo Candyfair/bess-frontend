@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Moon, Sun, Settings } from "lucide-react";
 import { useAssets } from "@/hooks/useAssets";
@@ -8,19 +9,23 @@ import { useTheme } from "@/context/ThemeContext";
 import BubbleChart from "@/components/BubbleChart/BubbleChart";
 import Toggle from "@/components/UI/Toggle";
 import FilterModal from "@/components/UI/FilterModal";
+import LogoutMenu from "@/components/UI/LogoutMenu";
 
 export default function Home() {
   const { assets, loading, error } = useAssets();
+  const { theme, toggleTheme } = useTheme();
+  const router = useRouter();
 
   const [metric, setMetric] = useState("power_mw");
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [isThemeSpinning, setIsThemeSpinning] = useState(false);
-
-  // activeFilters is a Set of asset type keys, or a Set containing "all"
   const [activeFilters, setActiveFilters] = useState(new Set(["all"]));
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isLogoutMenuOpen, setIsLogoutMenuOpen] = useState(false);
 
-  const { theme, toggleTheme } = useTheme();
+  // Total power value — hardcoded until the grid signal API is connected
+  const TOTAL_POWER = 5000;
+
 
   // ------------------------------------------------------------------
   // DERIVED STATE
@@ -53,22 +58,28 @@ export default function Home() {
   }
 
   function handleThemeToggle() {
-    if (isThemeSpinning) return; // prevents multiple clics during the animation
+    if (isThemeSpinning) return;
     setIsThemeSpinning(true);
     setTimeout(() => {
       toggleTheme();
       setIsThemeSpinning(false);
-    }, 350); // duration = one complete tour
+    }, 350);
   }
 
   function handleFilterChange(newFilters) {
     setActiveFilters(newFilters);
-
-    // If the selected bubble is no longer in the filtered set, close the panel
     if (selectedAsset && !newFilters.has("all")) {
       const stillVisible = newFilters.has(selectedAsset.asset_type);
       if (!stillVisible) setSelectedAsset(null);
     }
+  }
+
+  // Opens the filter modal and the logout menu simultaneously,
+  // matching the Figma design where the Settings icon triggers both.
+  function handleSettingsPress() {
+    const opening = !isLogoutMenuOpen;
+    setIsLogoutMenuOpen(opening);
+    setIsFilterOpen(opening);
   }
 
   // ------------------------------------------------------------------
@@ -105,11 +116,20 @@ export default function Home() {
       <main style={styles.root}>
 
         {/* ---- HEADER ---- */}
+        {/* ---- HEADER ---- */}
         <div style={styles.header}>
-          <button
-            style={styles.headerButton}
-            onClick={handleThemeToggle}
-            aria-label="Toggle theme"
+
+          {/* Total Power indicator — top left */}
+          <div style={styles.powerBadge}>
+            <span style={styles.powerText}>{TOTAL_POWER} mWh</span>
+          </div>
+
+          {/* Right side controls */}
+          <div style={styles.headerRight}>
+            <button
+              style={styles.headerButton}
+              onClick={handleThemeToggle}
+              aria-label="Toggle theme"
             >
               <span style={{
                 display: "flex",
@@ -120,14 +140,31 @@ export default function Home() {
                   : <Sun  size={22} color="var(--color-icon)" />
                 }
               </span>
-          </button>
-          <button
-            style={styles.headerButton}
-            onClick={() => setIsFilterOpen(true)}
-            aria-label="Open filters"
-            >
-            <Settings size={22} color="var(--color-icon)" />
-          </button>
+            </button>
+
+            {/* Settings button — wrapped in relative div to anchor LogoutMenu */}
+            <div style={{ position: "relative" }}>
+              <button
+                style={styles.settingsButton}
+                onClick={handleSettingsPress}
+                aria-label="Open settings"
+              >
+                <Settings size={22} color="var(--color-icon)" />
+              </button>
+
+              {isLogoutMenuOpen && (
+                <LogoutMenu
+                  opacity={0.5}
+                  onClose={() => setIsLogoutMenuOpen(false)}
+                  onLogout={() => {
+                    setIsLogoutMenuOpen(false);
+                    setIsFilterOpen(false);
+                    router.push("/login");
+                  }}
+                />
+              )}
+            </div>
+          </div>
         </div>
 
         {/* ---- TOGGLE — visible only when filter is battery-only ---- */}
@@ -152,6 +189,10 @@ export default function Home() {
           style={{
             ...styles.panel,
             transform: selectedAsset ? "translateY(0)" : "translateY(110%)",
+            visibility: selectedAsset ? "visible" : "hidden",
+            transition: selectedAsset
+              ? "transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s"
+              : "transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s 0.20s",
           }}
           onClick={(e) => e.stopPropagation()}
           >
@@ -179,7 +220,7 @@ export default function Home() {
                     />
                 </div>
               </div>
-
+            
               <Link href={`/assets/${selectedAsset.id}`} style={styles.detailLink}>
                 View details →
               </Link>
@@ -190,9 +231,12 @@ export default function Home() {
         {/* ---- FILTER MODAL ---- */}
         {isFilterOpen && (
           <FilterModal
-          activeFilters={activeFilters}
-          onChange={handleFilterChange}
-          onClose={() => setIsFilterOpen(false)}
+            activeFilters={activeFilters}
+            onChange={handleFilterChange}
+            onClose={() => {
+              setIsFilterOpen(false);
+              setIsLogoutMenuOpen(false);
+            }}
           />
         )}
 
@@ -228,18 +272,93 @@ const styles = {
     overflow: "hidden",
   },
 
+  // Header is now a full-width row to accommodate left + right elements
+  header: {
+    position: "absolute",
+    top: 12,
+    left: 12,
+    right: 12,
+    zIndex: 60,
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+
+  headerRight: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+
+  headerButton: {
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    padding: 4,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  // ⚙️ button with visible border per Figma
+  settingsButton: {
+    background: "none",
+    border: "1px solid var(--color-settings-border)",
+    borderRadius: 8,
+    cursor: "pointer",
+    padding: 6,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  // Total Power badge — top left, same visual style as the detail panel
+  powerBadge: {
+    backgroundColor: "var(--color-power-bg)",
+    border: "1px solid var(--color-power-border)",
+    borderRadius: 10,
+    paddingTop: 6,
+    paddingBottom: 6,
+    paddingLeft: 12,
+    paddingRight: 12,
+    backdropFilter: "blur(8px)",
+    WebkitBackdropFilter: "blur(8px)",
+  },
+
+  powerText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "var(--color-panel-title)",
+  },
+
+  toggleWrapper: {
+    position: "absolute",
+    top: 24,
+    left: "50%",
+    transform: "translateX(-50%)",
+    zIndex: 10,
+  },
+
+  mapWrapper: {
+    position: "absolute",
+    inset: 0,
+  },
+
   panel: {
     position: "absolute",
-    bottom: 0,
+    bottom: 60,
     left: 0,
     right: 0,
-    height: "35%",
+    height: "30%",
     backgroundColor: "var(--color-panel-bg)",
     border: "1px solid var(--color-panel-border)",
-    borderBottomWidth: 0,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderBottomWidth: 1,
+    borderRadius: 20,
     padding: "20px 24px",
+    marginLeft: "20px",
+    marginRight: "20px",
     zIndex: 20,
     transition: "transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
     display: "flex",
@@ -249,11 +368,26 @@ const styles = {
     WebkitBackdropFilter: "blur(8px)",
   },
 
+  panelHeader: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+
   panelTitle: {
     margin: 0,
     fontSize: 18,
     fontWeight: "700",
     color: "var(--color-panel-title)",
+  },
+
+  panelBody: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 8,
+    flex: 1,
+    overflowY: "auto",
   },
 
   panelRowsBlock: {
@@ -275,9 +409,13 @@ const styles = {
     lineHeight: 1,
   },
 
+  // "View details →" button
   detailLink: {
     display: "block",
-    textAlign: "center",
+    position: "absolute",
+    bottom: -45,
+    right: 0,
+    alignSelf: "flex-end",
     backgroundColor: "var(--color-detail-btn-bg)",
     color: "var(--color-detail-btn-text)",
     textDecoration: "none",
@@ -285,6 +423,8 @@ const styles = {
     fontSize: 14,
     paddingTop: 12,
     paddingBottom: 12,
+    paddingLeft: 20,
+    paddingRight: 20,
     borderRadius: 12,
     letterSpacing: 0.3,
   },
@@ -301,59 +441,18 @@ const styles = {
     fontSize: 15,
   },
 
-  header: {
-    position: "absolute",
-    top: 12,
-    right: 12,
-    zIndex: 10,
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  headerButton: {
-    background: "none",
-    border: "none",
-    cursor: "pointer",
-    padding: 4,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  toggleWrapper: {
-    position: "absolute",
-    top: 24,
-    left: "50%",
-    transform: "translateX(-50%)",
-    zIndex: 10,
-  },
-  mapWrapper: {
-    position: "absolute",
-    inset: 0,
-  },
-  panelHeader: {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  panelBody: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 8,
-    flex: 1,
-    overflowY: "auto",
-  },
   detailRow: {
     display: "flex",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
+
   detailLabel: {
     fontSize: 13,
     fontWeight: "500",
   },
+
   detailValue: {
     fontSize: 13,
     fontWeight: "600",
