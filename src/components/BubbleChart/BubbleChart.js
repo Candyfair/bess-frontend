@@ -138,6 +138,15 @@ export default function BubbleChart({ assets, metric, selectedId, onSelect }) {
       });
 
     svg.call(zoom);
+    const initialScale = 2.5;
+    svg.call(
+      zoom.transform,
+      d3.zoomIdentity
+        .translate(width / 2, height / 2)
+        .scale(initialScale)
+        .translate(-width / 2, -height / 2)
+    );
+
     zoomRef.current = zoom;
 
     return () => {

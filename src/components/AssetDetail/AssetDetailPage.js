@@ -4,8 +4,6 @@ import { ArrowLeft } from "lucide-react";
 import { BatteryFull, Zap, Thermometer, Unplug } from "lucide-react";
 import { getModeColor, getStatusColor, getValueColor } from "@/lib/assetUtils";
 
-
-
 // -------------------------------------------------------------------
 // SUB-COMPONENTS
 // -------------------------------------------------------------------
@@ -50,6 +48,8 @@ export default function AssetDetailPage({
 }) {
   const record = detail?.record ?? null;
   const isBattery = asset?.asset_type === "battery";
+
+  const dc = "var(--color-detail-text)";  // dc = defaultColor
 
   return (
     <div style={styles.root}>
@@ -98,7 +98,7 @@ export default function AssetDetailPage({
             <DataRow
               label="Current capacity"
               value={record ? `${record.energy_mwh} MWh` : "—"}
-              valueColor={record ? getValueColor(record.energy_mwh, "var(--color-detail-text)") : undefined}
+              valueColor={record ? getValueColor(record.energy_mwh, dc) : undefined}
             />
           </DataBlock>
         )}
@@ -108,22 +108,22 @@ export default function AssetDetailPage({
           <DataRow
             label="Active power"
             value={record ? `${record.power_mw} MW` : "—"}
-            valueColor={record ? getValueColor(record.power_mw, "var(--color-detail-text)") : undefined}
+            valueColor={record ? getValueColor(record.power_mw, dc) : undefined}
           />
           <DataRow
             label="Reactive power"
             value={record ? `${record.reactive_power_mvar} MVAr` : "—"}
-            valueColor={record ? getValueColor(record.reactive_power_mvar, "var(--color-detail-text)") : undefined}
+            valueColor={record ? getValueColor(record.reactive_power_mvar, dc) : undefined}
           />
           <DataRow
             label="Voltage"
             value={record ? `${record.voltage} V` : "—"}
-            valueColor={record ? getValueColor(record.voltage, "var(--color-detail-text)") : undefined}
+            valueColor={record ? getValueColor(record.voltage, dc) : undefined}
           />
           <DataRow
             label="Current Amps"
             value={record ? `${record.current_amps} A` : "—"}
-            valueColor={record ? getValueColor(record.current_amps, "var(--color-detail-text)") : undefined}
+            valueColor={record ? getValueColor(record.current_amps, dc) : undefined}
           />
         </DataBlock>
 
@@ -132,7 +132,7 @@ export default function AssetDetailPage({
           <DataRow
             label="Temperature"
             value={record ? `${record.temperature_celsius} C°` : "—"}
-            valueColor={record ? getValueColor(record.temperature_celsius, "var(--color-detail-text)") : undefined}
+            valueColor={record ? getValueColor(record.temperature_celsius, dc) : undefined}
           />
         </DataBlock>
 
@@ -141,12 +141,12 @@ export default function AssetDetailPage({
           <DataRow
             label="Operational mode"
             value={record?.operational_mode ?? "—"}
-            valueColor={record ? getModeColor(record.operational_mode, "var(--color-detail-text)") : undefined}
+            valueColor={record ? getModeColor(record.operational_mode, dc) : undefined}
           />
           <DataRow
             label="Telemetric status"
             value={record?.asset_status ?? "—"}
-            valueColor={record ? getStatusColor(record.asset_status, "var(--color-detail-text)") : undefined}
+            valueColor={record ? getStatusColor(record.asset_status, dc) : undefined}
           />
         </DataBlock>
 

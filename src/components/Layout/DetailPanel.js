@@ -100,7 +100,7 @@ export default function DetailPanel({
                 value={`${displayedAsset.max_charge_rate_mw} MW`}
               />
               <DetailRow
-                label="Current charge/discharge"
+                label={`Current ${displayedAsset.power_mw <- 0 ? "discharge" : "charge"}`}
                 value={`${displayedAsset.power_mw?.toFixed(2)} MW`}
                 valueColor={getValueColor(displayedAsset.power_mw)}
               />
