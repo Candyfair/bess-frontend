@@ -77,9 +77,23 @@
   --color-login-card-border: hsl(65, 46%, 10%);    /* #24260E */
   --color-login-input-bg:  hsl(0, 0%, 100%);
   --color-login-input-border: hsl(65, 46%, 10%);   /* #24260E */
+  --color-login-eye: hsl(65, 46%, 10%);   /* #24260E — same as text-primary */
 
   /* Status / loading */
   --color-text-muted:      hsl(200, 10%, 55%);
+
+  /* Detail page blocks */
+  --color-detail-block-bg:   hsla(0, 0%, 85%, 0.70);
+  --color-detail-icon-bg:    hsl(0, 0%, 85%);
+
+  /* Status colours */
+  --color-status-active:     hsl(134, 23%, 57%);
+  --color-status-fault:      hsl(3, 70%, 44%);
+  --color-status-curtailed:  hsl(217, 89%, 61%);
+  --color-value-negative:    hsl(3, 70%, 44%);
+
+  /* Detail page text */
+  --color-detail-text:       hsl(351, 35%, 30%);
 }
 
 /* ---- Dark theme ---- */
