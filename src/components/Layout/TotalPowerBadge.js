@@ -100,7 +100,6 @@ const styles = {
   },
 
   text: {
-    fontFamily: "'Roboto Mono', monospace",
     fontWeight: 600,
     color: "var(--color-panel-title)",
     // fontSize is inherited from the parent div's dynamic style

@@ -257,7 +257,7 @@ const styles = {
     fontSize: 13,
     fontWeight: "500",
     color: "var(--color-panel-title)",
-    fontFamily: "monospace",
+    fontFamily: "var(--font-mono)",
   },
 
   dataBlock: {

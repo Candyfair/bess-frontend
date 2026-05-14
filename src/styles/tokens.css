@@ -9,6 +9,10 @@
    ------------------------------------------------------------------- */
 
 :root {
+  /* Typography */
+  --font-mono:   'Roboto Mono', monospace;
+  --font-serif:  'Spectral', serif;
+
   /* ---- Raw colour values (HSL components only, no hsl() wrapper) ---- */
   /* Used to compose hsla() variants without duplicating hue/sat values  */
 
@@ -119,4 +123,6 @@
 body {
   background-color: var(--color-bg);
   transition: background-color 0.4s ease;
+  font-family: var(--font-mono);
+  letter-spacing: -0.05em;
 }

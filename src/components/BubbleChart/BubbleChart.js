@@ -23,7 +23,9 @@ export default function BubbleChart({ assets, metric, selectedId, onSelect }) {
   const simulationRef = useRef(null);
   const zoomRef = useRef(null);
   const nodesRef = useRef([]);
+
   const [nodes, setNodes] = useState([]);
+  const [currentScale, setCurrentScale] = useState(1);
 
   // currentZoom tracks the active D3 zoom transform so label positions
   // can be recalculated correctly when the user pans or zooms.
@@ -132,6 +134,7 @@ export default function BubbleChart({ assets, metric, selectedId, onSelect }) {
         // Store the current zoom transform and reposition labels
         currentZoomRef.current = event.transform;
         updateLabelPositions();
+        setCurrentScale(event.transform.k);
       });
 
     svg.call(zoom);
@@ -220,7 +223,7 @@ export default function BubbleChart({ assets, metric, selectedId, onSelect }) {
               ? `${Math.round(node.energy_mwh)} MWh`
               : `${rawPower >= 0 ? "" : "-"}${Math.abs(rawPower).toFixed(2)} MW`;
 
-          const fontSize = Math.max(8, Math.min(node.r * 0.24, 13));
+          const fontSize = Math.max(8, Math.min(node.r * currentScale * 0.24, 13 * currentScale));
           const isSelected = node.id === selectedId;
 
           return (
@@ -231,7 +234,7 @@ export default function BubbleChart({ assets, metric, selectedId, onSelect }) {
                 top: 0,
                 left: 0,
                 // Width matches the bubble diameter so text wraps correctly
-                width: node.r * 1.8,
+                width: node.r * currentScale * 1.8,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -243,36 +246,40 @@ export default function BubbleChart({ assets, metric, selectedId, onSelect }) {
                 willChange: "transform",
               }}
             >
-              <span
-                style={{
-                  fontSize,
-                  fontWeight: 600,
-                  color: "#ffffff",
-                  lineHeight: 1.1,
-                  textAlign: "center",
-                  // Truncate with ellipsis if the name is wider than the bubble
-                  maxWidth: "100%",
-                  overflow: "hidden",
-                  whiteSpace: "nowrap",
-                  textOverflow: "ellipsis",
-                }}
-              >
-                {node.name}
-              </span>
-              <span
-                style={{
-                  fontSize: fontSize * 0.88,
-                  color: isNegative
-                    ? "#FF6B6B"
-                    : isSelected
-                    ? "#e0f7fa"
-                    : "rgba(255,255,255,0.7)",
-                  lineHeight: 1.1,
-                  textAlign: "center",
-                }}
-              >
-                {metricLabel}
-              </span>
+            <span
+              style={{
+                fontSize,
+                fontWeight: 600,
+                fontFamily: "var(--font-serif)",
+                letterSpacing: "normal",
+                color: "#ffffff",
+                lineHeight: 1.1,
+                textAlign: "center",
+                maxWidth: "100%",
+                overflow: "hidden",
+                whiteSpace: "nowrap",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {node.name}
+            </span>
+
+            <span
+              style={{
+                fontSize: fontSize * 0.88,
+                fontFamily: "var(--font-serif)",
+                letterSpacing: "normal",
+                color: isNegative
+                  ? "#FF6B6B"
+                  : isSelected
+                  ? "#e0f7fa"
+                  : "rgba(255,255,255,0.7)",
+                lineHeight: 1.1,
+                textAlign: "center",
+              }}
+            >
+              {metricLabel}
+            </span>
             </div>
           );
         })}

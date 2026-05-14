@@ -123,8 +123,6 @@ const styles = {
     color: "var(--color-text-primary)",
     marginBottom: 32,
     textAlign: "center",
-    fontFamily: "'Roboto Mono', monospace",
-    letterSpacing: "-0.05em",
   },
 
   card: {
@@ -145,8 +143,6 @@ const styles = {
     fontWeight: "700",
     color: "var(--color-text-primary)",
     textAlign: "center",
-    fontFamily: "'Roboto Mono', monospace",
-    letterSpacing: "-0.05em",
   },
 
   fieldGroup: {
@@ -159,8 +155,6 @@ const styles = {
     fontSize: 14,
     fontWeight: "500",
     color: "var(--color-text-primary)",
-    fontFamily: "'Roboto Mono', monospace",
-    letterSpacing: "-0.05em",
   },
 
   input: {
@@ -172,8 +166,6 @@ const styles = {
     padding: "0 12px",
     fontSize: 14,
     color: "var(--color-text-primary)",
-    fontFamily: "'Roboto Mono', monospace",
-    letterSpacing: "-0.05em",
     outline: "none",
     boxSizing: "border-box",
   },
@@ -201,8 +193,6 @@ const styles = {
     cursor: "pointer",
     fontSize: 13,
     color: "var(--color-text-primary)",
-    fontFamily: "'Roboto Mono', monospace",
-    letterSpacing: "-0.05em",
     alignSelf: "flex-end",
     padding: 0,
   },
@@ -223,8 +213,6 @@ const styles = {
   dividerText: {
     fontSize: 13,
     color: "var(--color-text-primary)",
-    fontFamily: "'Roboto Mono', monospace",
-    letterSpacing: "-0.05em",
   },
 
   // Social buttons — icons are image placeholders for now
@@ -253,8 +241,6 @@ const styles = {
     fontSize: 14,
     fontWeight: "500",
     color: "var(--color-text-primary)",
-    fontFamily: "'Roboto Mono', monospace",
-    letterSpacing: "-0.05em",
   },
 
   submitButton: {
