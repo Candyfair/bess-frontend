@@ -34,10 +34,10 @@ export default function DetailPanel({
 
   // Derive the correct transform from the two state booleans
   const transform = isDetailOpen
-    ? "translateX(-120%)"
+    ? "translateX(calc(-50% - 120%))"
     : selectedAsset
-      ? "translateY(0)"
-      : "translateY(150%)";
+      ? "translateX(-50%)"
+      : "translateX(-50%) translateY(150%)";
 
   // visibility stays "visible" as long as an asset is selected —
   // hidden only when no asset is selected AND the panel is fully gone.
@@ -159,16 +159,16 @@ const styles = {
   panel: {
     position: "absolute",
     bottom: 60,
-    left: 0,
-    right: 0,
+    left: "50%",
+    transform: "translateX(-50%)",  // centering — will be overridden inline
+    width: "calc(100% - 40px)",
+    maxWidth: 600,
     height: "auto",
     maxHeight: "80%",
     backgroundColor: "var(--color-panel-bg)",
     border: "1px solid var(--color-panel-border)",
     borderRadius: 20,
     padding: "12px 18px",
-    marginLeft: 20,
-    marginRight: 20,
     zIndex: 20,
     display: "flex",
     flexDirection: "column",

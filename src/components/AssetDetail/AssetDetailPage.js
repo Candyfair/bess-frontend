@@ -53,119 +53,121 @@ export default function AssetDetailPage({
 
   return (
     <div style={styles.root}>
+      <div style={styles.inner}>
 
-      {/* ---- BACK BUTTON ---- */}
-      <div style={styles.backRow}>
-        <button style={styles.backButton} onClick={onBack} aria-label="Go back">
-          <ArrowLeft size={22} color="var(--color-icon)" />
-        </button>
-      </div>
-
-      {/* ---- SCROLLABLE CONTENT ---- */}
-      <div style={styles.scrollArea}>
-
-        {/* Asset name — yellow panel block */}
-        <div style={styles.nameBlock}>
-          <span style={styles.nameText}>{asset?.name ?? "—"}</span>
+        {/* ---- BACK BUTTON ---- */}
+        <div style={styles.backRow}>
+          <button style={styles.backButton} onClick={onBack} aria-label="Go back">
+            <ArrowLeft size={22} color="var(--color-icon)" />
+          </button>
         </div>
 
-        {/* EIC code */}
-        <div style={styles.eicBlock}>
-          <span style={styles.eicText}>EIC code: {asset?.eic_code ?? "—"}</span>
-        </div>
+        {/* ---- SCROLLABLE CONTENT ---- */}
+        <div style={styles.scrollArea}>
 
-        {loading && (
-          <div style={styles.loadingRow}>
-            <span style={styles.loadingText}>Loading...</span>
+          {/* Asset name — yellow panel block */}
+          <div style={styles.nameBlock}>
+            <span style={styles.nameText}>{asset?.name ?? "—"}</span>
           </div>
-        )}
 
-        {error && (
-          <div style={styles.loadingRow}>
-            <span style={{ ...styles.loadingText, color: "var(--color-status-fault)" }}>
-              Error: {error}
-            </span>
+          {/* EIC code */}
+          <div style={styles.eicBlock}>
+            <span style={styles.eicText}>EIC code: {asset?.eic_code ?? "—"}</span>
           </div>
-        )}
 
-        {/* ---- CAPACITY BLOCK — batteries only ---- */}
-        {isBattery && (
-          <DataBlock icon={BatteryFull}>
+          {loading && (
+            <div style={styles.loadingRow}>
+              <span style={styles.loadingText}>Loading...</span>
+            </div>
+          )}
+
+          {error && (
+            <div style={styles.loadingRow}>
+              <span style={{ ...styles.loadingText, color: "var(--color-status-fault)" }}>
+                Error: {error}
+              </span>
+            </div>
+          )}
+
+          {/* ---- CAPACITY BLOCK — batteries only ---- */}
+          {isBattery && (
+            <DataBlock icon={BatteryFull}>
+              <DataRow
+                label="Capacity"
+                value={record ? `${detail.max_capacity_mwh} MWh` : "—"}
+              />
+              <DataRow
+                label="Current capacity"
+                value={record ? `${record.energy_mwh} MWh` : "—"}
+                valueColor={record ? getValueColor(record.energy_mwh, dc) : undefined}
+              />
+            </DataBlock>
+          )}
+
+          {/* ---- POWER BLOCK ---- */}
+          <DataBlock icon={Zap}>
             <DataRow
-              label="Capacity"
-              value={record ? `${detail.max_capacity_mwh} MWh` : "—"}
+              label="Active power"
+              value={record ? `${record.power_mw} MW` : "—"}
+              valueColor={record ? getValueColor(record.power_mw, dc) : undefined}
             />
             <DataRow
-              label="Current capacity"
-              value={record ? `${record.energy_mwh} MWh` : "—"}
-              valueColor={record ? getValueColor(record.energy_mwh, dc) : undefined}
+              label="Reactive power"
+              value={record ? `${record.reactive_power_mvar} MVAr` : "—"}
+              valueColor={record ? getValueColor(record.reactive_power_mvar, dc) : undefined}
+            />
+            <DataRow
+              label="Voltage"
+              value={record ? `${record.voltage} V` : "—"}
+              valueColor={record ? getValueColor(record.voltage, dc) : undefined}
+            />
+            <DataRow
+              label="Current Amps"
+              value={record ? `${record.current_amps} A` : "—"}
+              valueColor={record ? getValueColor(record.current_amps, dc) : undefined}
             />
           </DataBlock>
-        )}
 
-        {/* ---- POWER BLOCK ---- */}
-        <DataBlock icon={Zap}>
-          <DataRow
-            label="Active power"
-            value={record ? `${record.power_mw} MW` : "—"}
-            valueColor={record ? getValueColor(record.power_mw, dc) : undefined}
-          />
-          <DataRow
-            label="Reactive power"
-            value={record ? `${record.reactive_power_mvar} MVAr` : "—"}
-            valueColor={record ? getValueColor(record.reactive_power_mvar, dc) : undefined}
-          />
-          <DataRow
-            label="Voltage"
-            value={record ? `${record.voltage} V` : "—"}
-            valueColor={record ? getValueColor(record.voltage, dc) : undefined}
-          />
-          <DataRow
-            label="Current Amps"
-            value={record ? `${record.current_amps} A` : "—"}
-            valueColor={record ? getValueColor(record.current_amps, dc) : undefined}
-          />
-        </DataBlock>
+          {/* ---- TEMPERATURE BLOCK ---- */}
+          <DataBlock icon={Thermometer}>
+            <DataRow
+              label="Temperature"
+              value={record ? `${record.temperature_celsius} C°` : "—"}
+              valueColor={record ? getValueColor(record.temperature_celsius, dc) : undefined}
+            />
+          </DataBlock>
 
-        {/* ---- TEMPERATURE BLOCK ---- */}
-        <DataBlock icon={Thermometer}>
-          <DataRow
-            label="Temperature"
-            value={record ? `${record.temperature_celsius} C°` : "—"}
-            valueColor={record ? getValueColor(record.temperature_celsius, dc) : undefined}
-          />
-        </DataBlock>
+          {/* ---- STATUS BLOCK ---- */}
+          <DataBlock icon={Unplug}>
+            <DataRow
+              label="Operational mode"
+              value={record?.operational_mode ?? "—"}
+              valueColor={record ? getModeColor(record.operational_mode, dc) : undefined}
+            />
+            <DataRow
+              label="Telemetric status"
+              value={record?.asset_status ?? "—"}
+              valueColor={record ? getStatusColor(record.asset_status, dc) : undefined}
+            />
+          </DataBlock>
 
-        {/* ---- STATUS BLOCK ---- */}
-        <DataBlock icon={Unplug}>
-          <DataRow
-            label="Operational mode"
-            value={record?.operational_mode ?? "—"}
-            valueColor={record ? getModeColor(record.operational_mode, dc) : undefined}
-          />
-          <DataRow
-            label="Telemetric status"
-            value={record?.asset_status ?? "—"}
-            valueColor={record ? getStatusColor(record.asset_status, dc) : undefined}
-          />
-        </DataBlock>
+          {/* ---- LAST UPDATED ---- */}
+          <div style={styles.lastUpdatedBlock}>
+            <span style={styles.lastUpdatedText}>Last updated time</span>
+            <span style={styles.lastUpdatedText}>
+              {record
+                ? new Date(record.timestamp).toLocaleString("fr-FR", {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                : "—"}
+            </span>
+          </div>
 
-        {/* ---- LAST UPDATED ---- */}
-        <div style={styles.lastUpdatedBlock}>
-          <span style={styles.lastUpdatedText}>Last updated time</span>
-          <span style={styles.lastUpdatedText}>
-            {record
-              ? new Date(record.timestamp).toLocaleString("fr-FR", {
-                  year: "numeric",
-                  month: "2-digit",
-                  day: "2-digit",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })
-              : "—"}
-          </span>
         </div>
-
       </div>
     </div>
   );
@@ -180,8 +182,18 @@ const styles = {
     inset: 0,
     display: "flex",
     flexDirection: "column",
+    alignItems: "center",
     backgroundColor: "transparent",
     zIndex: 50,
+  },
+
+  inner: {
+    width: "100%",
+    maxWidth: 600,
+    flex: 1,
+    display: "flex",
+    flexDirection: "column",
+    overflowY: "hidden",
   },
 
   // Back button row — sits above the scrollable content
