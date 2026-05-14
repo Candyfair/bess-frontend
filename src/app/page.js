@@ -241,7 +241,7 @@ const styles = {
 
   toggleWrapper: {
     position: "absolute",
-    top: 24,
+    top: 50,
     left: "50%",
     transform: "translateX(-50%)",
     zIndex: 10,

@@ -87,7 +87,7 @@ export default function FilterModal({ activeFilters, onChange, onClose }) {
 
         {/* View all — last row, mutually exclusive */}
         <div style={styles.row}>
-          <span style={styles.label}>View all</span>
+          <span style={styles.labelAll}>View all</span>
           <ToggleSwitch
             enabled={activeFilters.has("all")}
             onChange={handleViewAllToggle}
@@ -139,7 +139,12 @@ const styles = {
     justifyContent: "space-between",
   },
   label: {
-    fontSize: 15,
+    fontSize: 20,
+    fontWeight: "500",
+    color: "var(--color-modal-label)",
+  },
+  labelAll: {
+    fontSize: 20,
     fontWeight: "600",
     color: "var(--color-modal-label)",
   },

@@ -1,110 +1,84 @@
 "use client";
 
-// TotalPowerBadge — animated badge that shows total fleet power.
+// TotalPowerBadge — two separate elements that crossfade.
 //
-// Two states driven by isExpanded (= filter modal is open) :
-//   collapsed : top-left corner, amount only, small font
-//   expanded  : bottom-center, full label + amount, larger font
+// collapsed (small) : top-left, amount only
+// expanded (large)  : bottom-center, full label + amount
 //
-// When isDetailOpen is true the badge fades out entirely to make
-// room for the back arrow in AssetDetailPage.
-//
-// Animation strategy (Option A) :
-//   We animate `top`, `left`, `bottom`, `transform` and `font-size`
-//   directly via a CSS transition on the wrapping div.
-//   The element stays mounted at all times — no mount/unmount flicker.
-//   If performance is an issue on device we can switch to Option B
-//   (two elements with opacity crossfade) without touching the API.
+// Both elements are always mounted. CSS transitions handle
+// position, opacity and width simultaneously.
+// Phases overlap naturally because each element animates independently.
 
 export default function TotalPowerBadge({ value, isExpanded, isDetailOpen }) {
 
-  // ------------------------------------------------------------------
-  // DYNAMIC POSITION + SIZE
-  // We derive every animatable property from the two boolean props.
-  // CSS transition handles the interpolation between states.
-  // ------------------------------------------------------------------
-  const collapsed = !isExpanded;
-
-  const dynamicStyle = collapsed
-    ? {
-        // Collapsed state — top left
-        position: "fixed",
+  return (
+    <>
+      {/* ---- SMALL BADGE — top left ---- */}
+      <div style={{
+        ...styles.badge,
         top: 12,
         left: 12,
-        bottom: "auto",
-        transform: "translateX(0)",
-        fontSize: 14,
-        paddingTop: 6,
-        paddingBottom: 6,
-        paddingLeft: 12,
-        paddingRight: 12,
-        opacity: isDetailOpen ? 0 : 1,
-        pointerEvents: isDetailOpen ? "none" : "auto",
-      }
-    : {
-        // Expanded state — bottom center
-        position: "fixed",
-        top: "auto",
+        opacity: isExpanded || isDetailOpen ? 0 : 1,
+        pointerEvents: isExpanded || isDetailOpen ? "none" : "auto",
+        transform: isExpanded
+          ? "translate(40px, 100px)"   // slides toward bottom-left as it fades
+          : "translate(0, 0)",
+        transition: [
+          "opacity 0.2s ease",
+          "transform 0.2s ease",
+        ].join(", "),
+      }}>
+        <span style={styles.text}>{value} mWh</span>
+      </div>
+
+      {/* ---- LARGE BADGE — bottom center ---- */}
+      <div style={{
+        ...styles.badge,
         bottom: 32,
         left: "50%",
-        transform: "translateX(-50%)",
-        fontSize: 20,
-        paddingTop: 12,
-        paddingBottom: 12,
-        paddingLeft: 16,
-        paddingRight: 16,
-        opacity: isDetailOpen ? 0 : 1,
-        pointerEvents: isDetailOpen ? "none" : "auto",
-      };
-
-  return (
-    <div style={{ ...styles.badge, ...dynamicStyle }}>
-      <span style={{
-        ...styles.text,
-        fontSize: "inherit",
+        transform: isExpanded
+          ? "translateX(-50%)"
+          : "translateX(-50%) translate(-40px, -40px)", // starts from top-left area
+        opacity: isExpanded && !isDetailOpen ? 1 : 0,
+        pointerEvents: isExpanded && !isDetailOpen ? "auto" : "none",
+        transition: [
+          "opacity 0.2s ease",
+          "transform 0.2s ease",
+        ].join(", "),
       }}>
-        {collapsed
-          ? `${value} mWh`
-          : `Total power: ${value} mWh`
-        }
-      </span>
-    </div>
+        <span style={styles.textLarge}>
+          {isExpanded ? `Total power: ${value} mWh` : `${value} mWh`}
+        </span>
+      </div>
+    </>
   );
 }
 
-// -------------------------------------------------------------------
-// STYLES
-// -------------------------------------------------------------------
 const styles = {
   badge: {
-    // Visual style — identical in both states
+    position: "fixed",
+    zIndex: 60,
     backgroundColor: "var(--color-power-bg)",
     border: "1px solid var(--color-power-border)",
     borderRadius: 10,
+    paddingTop: 6,
+    paddingBottom: 6,
+    paddingLeft: 12,
+    paddingRight: 12,
     backdropFilter: "blur(8px)",
     WebkitBackdropFilter: "blur(8px)",
-    zIndex: 60,
-
-    // Transition — all animatable properties in one declaration.
-    // `top`, `left`, `bottom`, `transform`, `font-size`,
-    // `padding` and `opacity` all interpolate smoothly.
-    transition: [
-      "top 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-      "left 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-      "bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-      "transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-      "font-size 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-      "padding 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-      "opacity 0.35s ease",
-    ].join(", "),
+    whiteSpace: "nowrap",
   },
 
   text: {
+    fontFamily: "var(--font-mono)",
     fontWeight: 600,
+    fontSize: 14,
     color: "var(--color-panel-title)",
-    // fontSize is inherited from the parent div's dynamic style
-    // so the transition on font-size applies correctly
     letterSpacing: "-0.05em",
-    whiteSpace: "nowrap",
   },
+
+  textLarge: {
+    fontSize: 20,
+  }
 };

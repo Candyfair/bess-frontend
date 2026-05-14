@@ -2,30 +2,9 @@
 
 import { ArrowLeft } from "lucide-react";
 import { BatteryFull, Zap, Thermometer, Unplug } from "lucide-react";
+import { getModeColor, getStatusColor, getValueColor } from "@/lib/assetUtils";
 
-// -------------------------------------------------------------------
-// HELPERS
-// -------------------------------------------------------------------
 
-function getModeColor(mode) {
-  switch (mode) {
-    case "active":    return "var(--color-status-active)";
-    case "fault":     return "var(--color-status-fault)";
-    case "curtailed": return "var(--color-status-curtailed)";
-    default:          return "var(--color-detail-text)";
-  }
-}
-
-function getStatusColor(status) {
-  switch (status) {
-    case "communicating": return "var(--color-status-active)";
-    default:              return "var(--color-detail-text)";
-  }
-}
-
-function getValueColor(value) {
-  return value < 0 ? "var(--color-value-negative)" : "var(--color-detail-text)";
-}
 
 // -------------------------------------------------------------------
 // SUB-COMPONENTS
@@ -78,7 +57,7 @@ export default function AssetDetailPage({
       {/* ---- BACK BUTTON ---- */}
       <div style={styles.backRow}>
         <button style={styles.backButton} onClick={onBack} aria-label="Go back">
-          <ArrowLeft size={22} color="var(--color-detail-text)" />
+          <ArrowLeft size={22} color="var(--color-icon)" />
         </button>
       </div>
 
@@ -119,7 +98,7 @@ export default function AssetDetailPage({
             <DataRow
               label="Current capacity"
               value={record ? `${record.energy_mwh} MWh` : "—"}
-              valueColor={record ? getValueColor(record.energy_mwh) : undefined}
+              valueColor={record ? getValueColor(record.energy_mwh, "var(--color-detail-text)") : undefined}
             />
           </DataBlock>
         )}
@@ -129,22 +108,22 @@ export default function AssetDetailPage({
           <DataRow
             label="Active power"
             value={record ? `${record.power_mw} MW` : "—"}
-            valueColor={record ? getValueColor(record.power_mw) : undefined}
+            valueColor={record ? getValueColor(record.power_mw, "var(--color-detail-text)") : undefined}
           />
           <DataRow
             label="Reactive power"
             value={record ? `${record.reactive_power_mvar} MVAr` : "—"}
-            valueColor={record ? getValueColor(record.reactive_power_mvar) : undefined}
+            valueColor={record ? getValueColor(record.reactive_power_mvar, "var(--color-detail-text)") : undefined}
           />
           <DataRow
             label="Voltage"
             value={record ? `${record.voltage} V` : "—"}
-            valueColor={record ? getValueColor(record.voltage) : undefined}
+            valueColor={record ? getValueColor(record.voltage, "var(--color-detail-text)") : undefined}
           />
           <DataRow
             label="Current Amps"
             value={record ? `${record.current_amps} A` : "—"}
-            valueColor={record ? getValueColor(record.current_amps) : undefined}
+            valueColor={record ? getValueColor(record.current_amps, "var(--color-detail-text)") : undefined}
           />
         </DataBlock>
 
@@ -153,7 +132,7 @@ export default function AssetDetailPage({
           <DataRow
             label="Temperature"
             value={record ? `${record.temperature_celsius} C°` : "—"}
-            valueColor={record ? getValueColor(record.temperature_celsius) : undefined}
+            valueColor={record ? getValueColor(record.temperature_celsius, "var(--color-detail-text)") : undefined}
           />
         </DataBlock>
 
@@ -162,12 +141,12 @@ export default function AssetDetailPage({
           <DataRow
             label="Operational mode"
             value={record?.operational_mode ?? "—"}
-            valueColor={record ? getModeColor(record.operational_mode) : undefined}
+            valueColor={record ? getModeColor(record.operational_mode, "var(--color-detail-text)") : undefined}
           />
           <DataRow
             label="Telemetric status"
             value={record?.asset_status ?? "—"}
-            valueColor={record ? getStatusColor(record.asset_status) : undefined}
+            valueColor={record ? getStatusColor(record.asset_status, "var(--color-detail-text)") : undefined}
           />
         </DataBlock>
 
@@ -254,7 +233,7 @@ const styles = {
   },
 
   eicText: {
-    fontSize: 13,
+    fontSize: 18,
     fontWeight: "500",
     color: "var(--color-panel-title)",
     fontFamily: "var(--font-mono)",
@@ -288,13 +267,13 @@ const styles = {
   },
 
   dataLabel: {
-    fontSize: 13,
+    fontSize: 16,
     fontWeight: "500",
     color: "var(--color-detail-text)",
   },
 
   dataValue: {
-    fontSize: 13,
+    fontSize: 16,
     fontWeight: "600",
   },
 
@@ -309,8 +288,8 @@ const styles = {
   },
 
   lastUpdatedText: {
-    fontSize: 13,
-    fontWeight: "500",
+    fontSize: 16,
+    fontWeight: "600",
     color: "var(--color-detail-text)",
   },
 

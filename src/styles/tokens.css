@@ -29,7 +29,7 @@
 
   /* Backgrounds */
   --color-bg:              hsl(var(--hsl-background));
-  --color-bg-header:       transparent;
+  --color-bg-header:       hsla(var(--hsl-background), 0.3);
   --color-panel-bg:        hsla(var(--hsl-panel), 0.70);
 
   /* Text */
@@ -91,10 +91,10 @@
   --color-detail-icon-bg:    hsl(0, 0%, 85%);
 
   /* Status colours */
-  --color-status-active:     hsl(134, 23%, 57%);
-  --color-status-fault:      hsl(3, 70%, 44%);
-  --color-status-curtailed:  hsl(217, 89%, 61%);
-  --color-value-negative:    hsl(3, 70%, 44%);
+  --color-status-active:     hsl(134, 73%, 29%); 
+  --color-status-fault:      hsl(3, 75%, 50%);
+  --color-status-curtailed:  hsl(3, 75%, 50%);
+  --color-value-negative:    hsl(217, 89%, 61%);
 
   /* Detail page text */
   --color-detail-text:       hsl(351, 35%, 30%);
@@ -104,6 +104,7 @@
 /* Applied when <html data-theme="dark"> */
 [data-theme="dark"] {
   --color-bg:              hsl(var(--hsl-background-dark));
+  --color-bg-header:       hsla(var(--hsl-background-dark), 0.3);
   --color-icon:            hsl(var(--hsl-background));
 
   /* Panel is identical in both themes — no overrides needed */

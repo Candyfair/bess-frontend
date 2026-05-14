@@ -1,6 +1,8 @@
 "use client";
 
-import { ArrowRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowRight, X } from "lucide-react";
+import { getModeColor, getStatusColor, getValueColor } from "@/lib/assetUtils";
 
 // DetailPanel — slide-up panel showing summary data for the selected asset.
 //
@@ -19,6 +21,16 @@ export default function DetailPanel({
   onDismiss,
   onOpenDetail,
 }) {
+
+  // Keep the last selected asset in memory so the panel content
+  // stays visible during the closing animation.
+  const [lastAsset, setLastAsset] = useState(selectedAsset);
+
+  if (selectedAsset && selectedAsset !== lastAsset) {
+    setLastAsset(selectedAsset);
+  }
+
+  const displayedAsset = selectedAsset ?? lastAsset;
 
   // Derive the correct transform from the two state booleans
   const transform = isDetailOpen
@@ -46,32 +58,66 @@ export default function DetailPanel({
       }}
       onClick={(e) => e.stopPropagation()}
     >
-      {selectedAsset && (
+      {displayedAsset && (
         <>
-          <div style={styles.panelHeader}>
-            <h2 style={styles.panelTitle}>{selectedAsset.name}</h2>
-            <button
+          <button
               style={styles.closeButton}
               onClick={onDismiss}
               aria-label="Close panel"
-            >
-              ✕
-            </button>
+          >
+              <X />
+          </button>
+
+          <div style={styles.panelHeader}>
+            <h2 style={styles.panelTitle}>{displayedAsset.name}</h2>
           </div>
 
           <div style={styles.panelBody}>
             <div style={styles.panelRowsBlock}>
               <DetailRow
-                label="Capacity"
-                value={`${Math.round(selectedAsset.energy_mwh)} MWh`}
+                label="Type"
+                value={displayedAsset.asset_type}
+              />
+
+              {/* Batteries only */}
+              { displayedAsset.asset_type === "battery" && (
+                <>
+                  <DetailRow  
+                    label="Maximum capacity"
+                    value={`${displayedAsset.max_capacity_mwh} MWh`}
+                    />
+                  <DetailRow
+                    label="Current power"
+                    value={`${displayedAsset.energy_mwh?.toFixed(2)} MWh`}
+                    valueColor={getValueColor(displayedAsset.energy_mwh)}
+                    />
+                </>
+              )}
+
+              {/* All assets */}
+              <DetailRow
+                label="Maximum charge"
+                value={`${displayedAsset.max_charge_rate_mw} MW`}
               />
               <DetailRow
-                label="Power"
-                value={`${selectedAsset.power_mw?.toFixed(2)} MW`}
+                label="Current charge/discharge"
+                value={`${displayedAsset.power_mw?.toFixed(2)} MW`}
+                valueColor={getValueColor(displayedAsset.power_mw)}
+              />
+              <DetailRow
+                label="Reactive power"
+                value={`${displayedAsset.reactive_power_mvar?.toFixed(2)} MVAr`}
+                valueColor={getValueColor(displayedAsset.reactive_power_mvar)}
+              />
+              <DetailRow
+                label="Operational mode"
+                value={displayedAsset.operational_mode}
+                valueColor={getModeColor(displayedAsset.operational_mode)}
               />
               <DetailRow
                 label="Status"
-                value={selectedAsset.operational_mode ?? "—"}
+                value={displayedAsset.asset_status}
+                valueColor={getStatusColor(displayedAsset.asset_status)}
               />
             </div>
           </div>
@@ -94,11 +140,14 @@ export default function DetailPanel({
 // -------------------------------------------------------------------
 // DETAIL ROW
 // -------------------------------------------------------------------
-function DetailRow({ label, value }) {
+function DetailRow({ label, value, valueColor }) {
   return (
     <div style={styles.detailRow}>
       <span style={styles.detailLabel}>{label}</span>
-      <span style={styles.detailValue}>{value}</span>
+      <span style={{
+        ...styles.detailValue,
+        color: valueColor ?? "var(--color-panel-value)",
+      }}>{value}</span>
     </div>
   );
 }
@@ -112,17 +161,17 @@ const styles = {
     bottom: 60,
     left: 0,
     right: 0,
-    height: "30%",
+    height: "auto",
+    maxHeight: "80%",
     backgroundColor: "var(--color-panel-bg)",
     border: "1px solid var(--color-panel-border)",
     borderRadius: 20,
-    padding: "20px 24px",
+    padding: "12px 18px",
     marginLeft: 20,
     marginRight: 20,
     zIndex: 20,
     display: "flex",
     flexDirection: "column",
-    gap: 12,
     backdropFilter: "blur(8px)",
     WebkitBackdropFilter: "blur(8px)",
   },
@@ -136,26 +185,27 @@ const styles = {
 
   panelTitle: {
     margin: 0,
+    paddingLeft: 2,
     fontSize: 18,
     fontWeight: "700",
     color: "var(--color-panel-title)",
+    marginBottom: 12
   },
 
   closeButton: {
     background: "none",
     border: "none",
     color: "var(--color-panel-title)",
-    fontSize: 18,
+    fontSize: 24,
     cursor: "pointer",
-    padding: 4,
     lineHeight: 1,
+    textAlign: "right"
   },
 
   panelBody: {
     display: "flex",
     flexDirection: "column",
     gap: 8,
-    flex: 1,
     overflowY: "auto",
   },
 
@@ -175,18 +225,18 @@ const styles = {
     alignSelf: "flex-end",
     backgroundColor: "var(--color-detail-btn-bg)",
     color: "var(--color-detail-btn-text)",
-    border: "none",
+    border: "solid 1px var(--color-icon)",
     cursor: "pointer",
     fontWeight: "700",
-    fontSize: 14,
-    paddingTop: 12,
-    paddingBottom: 12,
-    paddingLeft: 20,
-    paddingRight: 20,
+    fontSize: 16,
+    paddingTop: 11,
+    paddingBottom: 11,
+    paddingLeft: 18,
+    paddingRight: 18,
     borderRadius: 12,
     letterSpacing: 0.3,
     position: "absolute",
-    bottom: -45,
+    bottom: -50,
     right: 0,
   },
 
@@ -198,13 +248,13 @@ const styles = {
   },
 
   detailLabel: {
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: "500",
     color: "var(--color-panel-label)",
   },
 
   detailValue: {
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: "600",
     color: "var(--color-panel-value)",
   },

@@ -93,6 +93,8 @@ const styles = {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+    backgroundColor: "var(--color-bg-header)",
+    borderRadius: 8
   },
 
   headerButton: {
